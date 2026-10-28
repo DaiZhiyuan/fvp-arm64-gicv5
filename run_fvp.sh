@@ -13,6 +13,7 @@ FVP_Base_RevC-2xAEMvA_GICV5	\
 		-C cluster1.NUM_CORES=4 \
 		-C cluster1.has_delayed_sysreg=0 \
 		-C cache_state_modelled=0 \
+		-C support_virtualization=1 \
 		-C bp.secure_memory=0 \
 		-C bp.pl011_uart0.uart_enable=1 \
 		-C bp.pl011_uart0.untimed_fifos=1 \

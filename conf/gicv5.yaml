@@ -103,6 +103,16 @@
           ist_splits: 7                         # Supported split values when a 2-level IST structure is used. possible values are from 1 to 7, '1' is default means Level 2 IST sizes supported:4KB
           # Minimum LPI ID bits requiring 16-byte level-2 ISTEs for metadata.
           istmd_sz: 0                           # Minimum number of LPI ID bits which requires a level 2 ISTE size of 16 bytes to store metadata.
+          # Number of VM ID bits reported in IRS_IDR4 (8-16).
+          vm_id_bits: 16                        # The number of VM ID bits supported by the IRS.
+          # Number of VPE ID bits reported in IRS_IDR4 (8-16).
+          vpe_id_bits: 16                       # The number of VPE ID bits supported by the IRS.
+          # VPE descriptor size as log2(bytes) reported in IRS_IDR4 (3-12).
+          vped_size: 3                          # VPE descriptors are 2^vped_size bytes (8 bytes here).
+          # VMT levels: 1 = flat, 2 = two-level.
+          vmt_levels: 2                         # Levels supported for the VMT, possible values [1 - 2].
+          # Advertise virtual one-of-N support; requires support_one_of_n.
+          support_virtual_one_of_n: false       # Only valid when support_one_of_n is enabled.
         # Configured IRS instances.
         INSTANCES:
           # Unique name of this IRS instance.
