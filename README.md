@@ -124,5 +124,3 @@ Err:          0
 ## License
 
 This repository is distributed under the MIT License. Embedded binaries and patches belong to their respective upstream licenses (GPLv2 for Linux Kernel, BSD-3-Clause for TF-A).
-
-```
