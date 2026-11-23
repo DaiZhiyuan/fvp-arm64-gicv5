@@ -117,6 +117,53 @@ IPI7:         0          0          0          0          0          0          
 Err:          0
 ```
 
+## KVM vGICv5 Selftest Environment
+
+The environment now ships a kernel with in-kernel KVM vGICv5 support plus the ARM64 KVM selftests, so the vGICv5 virtualization can be exercised directly on the model.
+
+### Changes in this update
+
+* **`linux/Image`**: replaced with **Linux v7.4.0-rc4** (`arch/arm64` `defconfig` + `virt.config`, with `CONFIG_KVM=y` and the GICv5 irqchip; 52-bit VA/PA with LPA2). Built with `aarch64-linux-gnu-gcc` 13.3.0. The in-kernel vGICv5 is part of `CONFIG_KVM` (no separate Kconfig option).
+* **`rootfs/rootfs.ext2`**: now carries the KVM selftests under `/opt/kvm-selftests/arm64/` (six GIC-related binaries), built from `tools/testing/selftests/kvm` of the same kernel tree.
+* **`run_fvp.sh`**:
+  * `-C cluster{0,1}.has_arm_v8-5=1` and `-C cluster{0,1}.has_arm_v8-6=1` — **required for KVM vGICv5 guests**, see root-cause note below.
+  * `-C bp.terminal_{0..3}.start_telnet=0` — prevents the model from auto-launching an `xterm` that grabs the UART telnet port (which otherwise blocks scripted access to `terminal_0`).
+
+### Why `has_arm_v8-6` is needed (root-cause note)
+
+KVM v7.4-rc4 has a known bug: `kvm_vcpu_load_fgt()` returns early when the CPU does not implement **FEAT_FGT**, before computing the per-vCPU `ICH_HFGRTR/HFGWTR/HFGITR_EL2` values. Those registers then stay `0`, and since the GICv5 fine-grained trap bits are **negative polarity** (`0` = trap enabled), every guest access to GICv5 CPU-interface system registers traps to EL2; the ones without an in-kernel handler (e.g. `ICC_PPI_PRIORITYR0_EL1`) get an undefined exception injected and the guest dies:
+
+```text
+kvm [183]: Unsupported guest access at: 404c24
+ { Op0( 3), Op1( 0), CRn(12), CRm(14), Op2( 0), func_write },   # ICC_PPI_PRIORITYR0_EL1
+```
+
+On this model FEAT_FGT is gated behind the ARMv8.6 extension bundle (`has_arm_v8-6`), even though `cluster.has_fgt` defaults to `1` — hence both `has_arm_v8-5=1` and `has_arm_v8-6=1`. The equivalent kernel-side fix is upstream: *"KVM: arm64: Decouple computation of the GICv5 trap registers from FEAT_FGT"* (Gustavo Romero, kvmarm).
+
+### Selftest results (run on FVP with this `Image` + `rootfs`)
+
+| Test              | Exit code   | Result | Notes                                                                 |
+|-------------------|-------------|--------|-----------------------------------------------------------------------|
+| `vgic_v5`         | 0           | PASS   | All 11 subtests pass: address / NR_IRQS / IRS_REGS / IST attrs, userspace PPI attrs, CPU sysreg attrs, sparse vCPU IDs, PPIs, SPIs, LPIs, IST save/restore |
+| `no-vgic`         | 0           | PASS   | Runs the vGICv5 part; GICv3 parts skipped                              |
+| `vgic_init`       | 4 (`KSFT_SKIP`) | SKIP | Requires vGICv3; the GCIE legacy CPU interface is not detected on this model |
+| `vgic_irq`        | 4 (`KSFT_SKIP`) | SKIP | Same (`kvm_supports_vgic_v3()` unmet)                                  |
+| `vgic_lpi_stress` | 4 (`KSFT_SKIP`) | SKIP | Same                                                                   |
+| `vgic_its_save`   | 4 (`KSFT_SKIP`) | SKIP | Same                                                                   |
+
+Full session log: `dmesg` shows `kvm [1]: GCIE system register CPU interface` at boot, and the tests produce zero `Unsupported guest access` / panic messages.
+
+### Running the selftests
+
+Boot the environment, log in as `root` (no password), then run:
+
+```bash
+/opt/kvm-selftests/arm64/vgic_v5
+# exit code 0 = pass; 4 = KSFT_SKIP (requirement not met)
+
+ls /opt/kvm-selftests/arm64/
+```
+
 ## Reference Patches
 
 * Linux Host Driver: `v7_20250703_lpieralisi_arm_gicv5_host_driver_implementation` (Lorenzo Pieralisi)
