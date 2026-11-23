@@ -7,7 +7,7 @@ It integrates a bootable Linux kernel carrying the GICv5 host driver patchset, c
 ## Key Features
 
 * **Base Model**: Target against `FVP_Base_RevC_AEMvA_GICv5`.
-* **Linux Kernel**: Built with `v7_20250703_lpieralisi_arm_gicv5_host_driver_implementation` patch series (`linux/Image`).
+* **Linux Kernel**: mainline **`linux-7.4-rc4`** with native GICv5 support (host driver and KVM vGICv5) (`linux/Image`).
 * **TF-A Firmware**: Integrated Trusted Firmware-A with native GICv5 driver support (`tf-a/bl1.bin`, `tf-a/fip.bin`).
 * **Device Tree & Config**: Hardware configuration via `dts/fvp-base-gicv5.dts` and `conf/gicv5.yaml`.
 * **Out-of-the-Box Execution**: Pre-compiled binaries managed via Git LFS for rapid prototyping without toolchain setup.
@@ -166,7 +166,7 @@ ls /opt/kvm-selftests/arm64/
 
 ## Reference Patches
 
-* Linux Host Driver: `v7_20250703_lpieralisi_arm_gicv5_host_driver_implementation` (Lorenzo Pieralisi)
+* ~~Linux Host Driver: `v7_20250703_lpieralisi_arm_gicv5_host_driver_implementation` (Lorenzo Pieralisi)~~ — superseded; GICv5 support (host driver, KVM vGICv5 and selftests) is now in the current kernel, **mainline `linux-7.4-rc4`**.
 
 ## License
 
